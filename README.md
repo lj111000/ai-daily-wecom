@@ -2,6 +2,12 @@
 
 每日 AI 前沿动态，定时推送到企业微信群。**全免费 / 零服务器 / GitHub Actions 托管。**
 
+> ⚠️ **部署位置说明**：定时任务在 **GitHub Actions** 上跑（gitee 只是镜像展示，gitee 的 Gitee Go 不支持 cron 触发）。本地同时配置 gitee + github 两个 remote，用 `./push-all.sh` 一键推送。
+
+**镜像同步**：
+- 主仓库（GitHub，跑 Actions）：https://github.com/你的用户名/ai-daily-wecom
+- 镜像（gitee，仅展示）：https://gitee.com/mrlij/ai-daily-wecom
+
 - 北京时间 **9:00**：开源项目 + 教程博客（早上看技术更专注）
 - 北京时间 **14:00**：行业新闻 + 前沿论文（下午看资讯更轻松）
 
