@@ -29,12 +29,13 @@ GLM_TIMEOUT = 30               # 单次 API 超时（秒）
 PUSH_TITLE = "🤖 AI 今日速递"
 PUSH_COUNT = 15
 
-# ============ RSS 源（中文 AI 资讯）============
+# ============ RSS 源 ============
 # weight 越高优先级越高（1-5），影响打分排序
-# 经验证：国内 AI 站点很多没有 RSS（智东西/AIbase/新智元/AIGC开放社区）
-# 真正可用的只有以下 3 个，质量足够
+# 资讯类（量子位/机器之心/雷锋网）：原生 RSS，中文
+# 技术类（arxiv/HF Blog/Raschka）：原生 RSS，英文，GLM 改写时翻译成中文
+# 经验证：中文 AI 技术向 RSS 基本为零，技术源只能用英文
 RSS_SOURCES = {
-    # ============ AI 前沿技术（深度解读/论文）============
+    # ============ AI 前沿资讯（产品/解读/业界）============
     "frontier": [
         {
             "name": "机器之心",
@@ -43,14 +44,14 @@ RSS_SOURCES = {
             "lang": "zh",
         },
         {
-            "name": "雷锋网 AI 频道",
+            "name": "雷锋网",
             "url": "https://www.leiphone.com/feed/",
             "weight": 4,
             "lang": "zh",
         },
     ],
 
-    # ============ AI 行业动态（产品/公司/资本）============
+    # ============ AI 行业动态（融资/公司/政策）============
     "industry": [
         {
             "name": "量子位",
@@ -59,10 +60,37 @@ RSS_SOURCES = {
             "lang": "zh",
         },
         {
-            "name": "雷锋网 AI 频道",
+            "name": "雷锋网",
             "url": "https://www.leiphone.com/feed/",
             "weight": 4,
             "lang": "zh",
+        },
+    ],
+
+    # ============ AI 技术向（论文/工程/源码解读）============
+    # 英文为主，GLM 改写时一并翻译成中文
+    "tech": [
+        {
+            # arxiv cs.CL：NLP/LLM 论文，每天 100+ 篇
+            # weight 给中：靠热词命中筛出 LLM/Agent/RLHF 等热门论文，冷门自动沉底
+            "name": "arxiv cs.CL",
+            "url": "http://export.arxiv.org/rss/cs.CL",
+            "weight": 3,
+            "lang": "en",
+        },
+        {
+            # HuggingFace Blog：工程实践 + 模型发布解读
+            "name": "HuggingFace Blog",
+            "url": "https://huggingface.co/blog/feed.xml",
+            "weight": 4,
+            "lang": "en",
+        },
+        {
+            # Sebastian Raschka：LLM 论文深度解读 + 实战
+            "name": "Sebastian Raschka",
+            "url": "https://magazine.sebastianraschka.com/feed",
+            "weight": 4,
+            "lang": "en",
         },
     ],
 }
@@ -70,8 +98,9 @@ RSS_SOURCES = {
 # ============ 分类 Emoji 标 ============
 # 用于在标题前显示来源类型（用 category 判断）
 SOURCE_META = {
-    "frontier": {"emoji": "🔬"},
-    "industry": {"emoji": "📰"},
+    "frontier": {"emoji": "📰"},
+    "industry": {"emoji": "💼"},
+    "tech":     {"emoji": "🔬"},
 }
 
 # ============ 热词加权（命中加分，影响排序）============
@@ -90,6 +119,27 @@ HOT_KEYWORDS = [
     "突破", "首发", "全球首", "国产", "超越", "碾压",
     "发布", "上线", "开源", "免费",
 ]
+
+# ============ arxiv 论文白名单（命中才进选片）============
+# arxiv cs.CL 每天百来篇，不过滤会被冷门论文淹没
+# 命中标题或摘要任一关键词即保留
+ARXIV_WHITELIST = [
+    "llm", "large language model", "language model",
+    "transformer", "attention", "moe", "mixture of expert",
+    "rlhf", "reinforcement learning", "reward",
+    "agent", "tool use", "function calling",
+    "rag", "retrieval",
+    "quantiz", "pruning", "distill", "fine-tun", "sft", "lora",
+    "inference", "serving", "kv cache", "speculative",
+    "reasoning", "chain of thought", "cot",
+    "scaling law", "training",
+    "qwen", "llama", "deepseek", "gemma", "mistral",
+    "diffusion", "multimodal", "vision language",
+    "mamba", "ssm", "state space model",
+    "prompt", "in-context",
+    "safety", "alignment", "jailbreak",
+]
+
 
 # ============ 运行参数 ============
 FETCH_TIMEOUT = 10       # 单源抓取超时（秒）

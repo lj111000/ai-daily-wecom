@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import feedparser
 
-from config import RSS_SOURCES, FETCH_TIMEOUT, LOOKBACK_HOURS
+from config import RSS_SOURCES, FETCH_TIMEOUT, LOOKBACK_HOURS, ARXIV_WHITELIST
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +41,19 @@ def _strip_html(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _passes_whitelist(title: str, summary: str) -> bool:
+    """arxiv 类高噪音源用白名单过滤：标题或摘要命中任一关键词"""
+    text = (title + " " + summary).lower()
+    return any(kw in text for kw in ARXIV_WHITELIST)
+
+
 def fetch_one(source: dict, category: str) -> list[dict]:
     """
     抓单个 RSS 源，返回标准化的文章列表
     source: {"name", "url", "weight", "lang"}
     """
+    # arxiv 类高噪音源需要白名单过滤
+    is_noisy = "arxiv" in source["name"].lower()
     articles = []
     try:
         # feedparser 自带 socket 超时不太靠谱，用 ThreadPool 兜底
@@ -71,6 +79,10 @@ def fetch_one(source: dict, category: str) -> list[dict]:
                 entry.get("summary") or entry.get("description", "")
             )
             if not title or not link:
+                continue
+
+            # arxiv 白名单过滤
+            if is_noisy and not _passes_whitelist(title, summary):
                 continue
 
             articles.append({
