@@ -41,22 +41,22 @@ RSS_SOURCES = {
     # ============ 开源项目 ============
     "open_source": [
         {
-            "name": "HuggingFace Blog",
-            "url": "https://huggingface.co/blog/feed.xml",
-            "weight": 5,
-            "lang": "en",
-        },
-        {
-            "name": "HuggingFace 每日热门模型",
-            "url": "https://huggingface.co/blog/feed.xml",
+            "name": "NVIDIA Deep Learning Blog",
+            "url": "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
             "weight": 4,
             "lang": "en",
         },
         {
-            "name": "Papers with Code (Latest)",
-            "url": "https://paperswithcode.com/latest.xml",
+            "name": "MIT AI News",
+            "url": "https://news.mit.edu/rss/topic/artificial-intelligence2",
             "weight": 4,
             "lang": "en",
+        },
+        {
+            "name": "InfoQ 中文",
+            "url": "https://www.infoq.cn/feed",
+            "weight": 3,
+            "lang": "zh",
         },
     ],
 
@@ -64,14 +64,14 @@ RSS_SOURCES = {
     "tutorial": [
         {
             "name": "OpenAI Blog",
-            "url": "https://openai.com/blog/rss.xml",
+            "url": "https://openai.com/news/rss.xml",
             "weight": 5,
             "lang": "en",
         },
         {
             "name": "Sebastian Raschka (LLM 深度教程)",
             "url": "https://magazine.sebastianraschka.com/feed",
-            "weight": 4,
+            "weight": 5,
             "lang": "en",
         },
         {
@@ -91,54 +91,48 @@ RSS_SOURCES = {
     # ============ 行业新闻 ============
     "news": [
         {
+            "name": "TechCrunch AI",
+            "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+            "weight": 5,
+            "lang": "en",
+        },
+        {
+            "name": "VentureBeat AI",
+            "url": "https://venturebeat.com/category/ai/feed/",
+            "weight": 4,
+            "lang": "en",
+        },
+        {
+            "name": "MarkTechPost",
+            "url": "https://www.marktechpost.com/feed/",
+            "weight": 3,
+            "lang": "en",
+        },
+        {
             "name": "量子位",
             "url": "https://www.qbitai.com/feed",
-            "weight": 4,
-            "lang": "zh",
-        },
-        {
-            "name": "新智元",
-            "url": "https://www.51qumi.com/feed",
             "weight": 3,
             "lang": "zh",
-        },
-        {
-            "name": "TLDR AI Newsletter",
-            "url": "https://tldr.tech/api/tech/ai/rss",
-            "weight": 4,
-            "lang": "en",
-        },
-        {
-            "name": "The Batch (吴恩达)",
-            "url": "https://www.deeplearning.ai/the-batch/feed/",
-            "weight": 4,
-            "lang": "en",
-        },
-        {
-            "name": "AI News (Reddit 热门)",
-            "url": "https://www.reddit.com/r/artificial/.rss",
-            "weight": 2,
-            "lang": "en",
         },
     ],
 
     # ============ 前沿论文 ============
     "paper": [
         {
-            "name": "Papers with Code (热门)",
-            "url": "https://paperswithcode.com/most_recent.xml",
-            "weight": 4,
-            "lang": "en",
-        },
-        {
             "name": "ArXiv cs.AI",
             "url": "https://export.arxiv.org/rss/cs.AI",
-            "weight": 3,
+            "weight": 4,
             "lang": "en",
         },
         {
             "name": "ArXiv cs.CL (NLP)",
             "url": "https://export.arxiv.org/rss/cs.CL",
+            "weight": 4,
+            "lang": "en",
+        },
+        {
+            "name": "ArXiv cs.LG",
+            "url": "https://export.arxiv.org/rss/cs.LG",
             "weight": 3,
             "lang": "en",
         },
@@ -163,6 +157,6 @@ HOT_KEYWORDS = [
 
 # ============ 运行参数 ============
 MAX_SUMMARY_LEN = 120    # 摘要截断长度（字符）
-FETCH_TIMEOUT = 15       # 单源抓取超时（秒）
-LOOKBACK_HOURS = 24      # 只取最近 N 小时内的文章
+FETCH_TIMEOUT = 10       # 单源抓取超时（秒）
+LOOKBACK_HOURS = 72      # 抓最近 3 天，去重靠 seen.json（部分博客更新慢）
 SEEN_FILE = os.path.join(os.path.dirname(__file__), "..", "seen.json")
