@@ -1,0 +1,56 @@
+name: AI Daily Push
+
+# 北京时间 9:00 / 14:00 各推送一次
+# GitHub Actions cron 用 UTC：北京 9:00 = UTC 1:00；北京 14:00 = UTC 6:00
+# 触发时间会自动判断走 morning 还是 afternoon（main.py 里根据小时数）
+on:
+  schedule:
+    - cron: '0 1 * * *'    # 北京 09:00
+    - cron: '0 6 * * *'    # 北京 14:00
+  workflow_dispatch:        # 支持手动触发，方便测试
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-daily-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run pusher
+        working-directory: src
+        env:
+          WECOM_WEBHOOK_KEY: ${{ secrets.WECOM_WEBHOOK_KEY }}
+          TZ: Asia/Shanghai
+        run: |
+          python main.py
+
+      - name: Commit seen.json
+        # 把 seen.json 变更提交回仓库，下次运行才能记住已推过的
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -f src/seen.json ]]; then
+            git add src/seen.json
+            git diff --cached --quiet || git commit -m "chore: update seen.json [skip ci]"
+            git push
+          fi
