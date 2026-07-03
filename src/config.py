@@ -1,5 +1,5 @@
 """
-配置文件：RSS 源 + Webhook + 推送策略
+配置文件：RSS 源 + Webhook + LLM + 推送策略
 """
 
 import os
@@ -15,11 +15,19 @@ def get_webhook_url() -> str:
     return f"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={WECOM_WEBHOOK_KEY}"
 
 
+# ============ LLM 配置（用于改写简讯）============
+# 智谱 GLM-4-Flash：国内访问稳，免费额度足够日推
+# 控制台：https://open.bigmodel.cn/  →  API Keys
+GLM_API_KEY = os.environ.get("GLM_API_KEY", "")
+GLM_BASE_URL = "https://open.bigmodel.cn/api/paas/v4"
+GLM_MODEL = "glm-4-flash"      # 免费、快；想要更强用 "glm-4-plus"
+GLM_TIMEOUT = 30               # 单次 API 超时（秒）
+
+
 # ============ 推送策略 ============
-# 每天 9:00 一次，推 10 条混排（按打分排序）
-PUSH_TITLE = "🤖 AI 今日 10 条速递"
-PUSH_SUBTITLE = "国内 AI 资讯自动聚合 · 量子位 / 机器之心 / 雷锋网"
-PUSH_COUNT = 10
+# 每天 9:00 一次，推 15 条简讯 + 1 句每日微语（LLM 改写）
+PUSH_TITLE = "🤖 AI 今日速递"
+PUSH_COUNT = 15
 
 # ============ RSS 源（中文 AI 资讯）============
 # weight 越高优先级越高（1-5），影响打分排序
@@ -84,7 +92,6 @@ HOT_KEYWORDS = [
 ]
 
 # ============ 运行参数 ============
-MAX_SUMMARY_LEN = 120    # 摘要截断长度（字符）
 FETCH_TIMEOUT = 10       # 单源抓取超时（秒）
 LOOKBACK_HOURS = 72      # 抓最近 3 天，去重靠 seen.json
 SEEN_FILE = os.path.join(os.path.dirname(__file__), "..", "seen.json")

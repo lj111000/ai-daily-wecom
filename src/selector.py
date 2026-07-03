@@ -85,16 +85,28 @@ def score_article(a: dict) -> float:
 
 # ============ 选片（混排，不分类）============
 
+def _normalize_title(title: str) -> str:
+    """归一化标题用于相似去重：去空格/标点/大小写"""
+    return re.sub(r"[\s\W_]+", "", title.lower())
+
+
 def select(articles: list[dict], count: int = PUSH_COUNT) -> list[dict]:
-    """按打分取 top N，混排（不分类别）"""
+    """按打分取 top N，混排（不分类别），跨分类相似去重"""
     scored = sorted(
         articles,
         key=lambda a: (score_article(a), a.get("fetched_at", 0)),
         reverse=True,
     )
-    top = scored[:count]
-    # 截断摘要
-    for a in top:
-        if len(a["summary"]) > 120:
-            a["summary"] = a["summary"][:120] + "..."
+
+    # 二次去重：同一篇文章可能被多个分类收录，标题归一化前缀一致就跳过
+    seen_prefix: set[str] = set()
+    top = []
+    for a in scored:
+        norm = _normalize_title(a["title"])[:20]  # 前 20 字符当作指纹
+        if norm in seen_prefix:
+            continue
+        seen_prefix.add(norm)
+        top.append(a)
+        if len(top) >= count:
+            break
     return top

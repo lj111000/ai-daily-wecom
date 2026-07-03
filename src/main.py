@@ -3,7 +3,7 @@ ai-daily-wecom 主入口
 用法：
     python main.py              # 正常推送（GitHub Actions 调用）
     python main.py --dry-run    # 只打印不推送
-    python main.py --count 5    # 改推送条数（默认 10）
+    python main.py --count 5    # 改推送条数（默认 15）
 """
 
 import logging
@@ -12,6 +12,7 @@ import argparse
 from config import PUSH_TITLE, PUSH_COUNT
 from fetcher import fetch_all
 from selector import load_seen, save_seen, filter_seen, select
+from summarizer import summarize_batch
 from formatter import format_message
 from notifier import send_markdown
 
@@ -57,14 +58,18 @@ def main():
         return
     logger.info(f"📝 选出 {len(selected)} 条")
 
-    # 4. 格式化
-    message = format_message(selected)
+    # 4. LLM 改写成简讯 + 微语
+    briefs, quote = summarize_batch(selected)
+    logger.info(f"✍️ LLM 改写完成 ({len(briefs)} 条简讯)")
+
+    # 5. 格式化
+    message = format_message(selected, briefs, quote)
     logger.info(f"📝 生成消息 ({len(message)} 字符)")
 
-    # 5. 推送
+    # 6. 推送
     ok = send_markdown(message, dry_run=args.dry_run)
 
-    # 6. 推送成功才更新 seen
+    # 7. 推送成功才更新 seen
     if ok and not args.dry_run:
         save_seen(seen | new_hashes)
         logger.info(f"💾 记录 {len(new_hashes)} 条新 hash")

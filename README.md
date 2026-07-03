@@ -1,162 +1,154 @@
 # ai-daily-wecom
 
-每日 AI 前沿动态，定时推送到企业微信群。**全免费 / 零服务器 / GitHub Actions 托管。**
+每日 AI 早报，定时推送到企业微信群。**全中文 / LLM 改写 / 零服务器 / GitHub Actions 托管。**
 
-> ⚠️ **部署位置说明**：定时任务在 **GitHub Actions** 上跑（gitee 只是镜像展示，gitee 的 Gitee Go 不支持 cron 触发）。本地同时配置 gitee + github 两个 remote，用 `./push-all.sh` 一键推送。
-
-**镜像同步**：
-- 主仓库（GitHub，跑 Actions）：https://github.com/你的用户名/ai-daily-wecom
-- 镜像（gitee，仅展示）：https://gitee.com/mrlij/ai-daily-wecom
-
-- 北京时间 **9:00**：开源项目 + 教程博客（早上看技术更专注）
-- 北京时间 **14:00**：行业新闻 + 前沿论文（下午看资讯更轻松）
+> 部署位置：定时任务在 **GitHub Actions** 上跑（gitee 仅作镜像展示）。本地同时配 gitee + github 两个 remote，用 `./push-all.sh` 一键推送。
 
 ## 推送效果
 
 ```
-🌅 早安 · 今日 AI 工程动态
-> 2026-07-03 Thursday · 开源项目 + 教程博客
+# 🤖 AI 今日速递 07月03日 Friday
 
-🔧 开源项目 (3 条)
-
-1. vllm/vllm · PagedAttention 优化
-> 本周新增显存分页机制，吞吐量提升 30%...
-📍 GitHub Trending (Python · AI/ML)
-
-2. ...
-
-📚 教程博客 (2 条)
+1. AReaL 2.0开源，自演进智能体RL基础设施升级 · 量子位
+2. Claude Sonnet 5性价比受挫，千问和 Minimax成对手 · 雷锋网
+3. 世界模型新用，AI当裁判非选手 · 量子位
 ...
+15. 自变量发布X-Tokenizer，多模态对齐性能提升 · 雷锋网
 
----
-由 ai-daily-wecom 自动推送 · 数据源见 README
+【每日微语】AI技术迭代，产品定义才是关键
 ```
+
+特点：
+- **15 条简讯**：从 50+ 篇原始 RSS 文章里打分挑出 top 15
+- **LLM 改写**：每条用 GLM-4-Flash 压成 15-25 字一句话
+- **每日微语**：LLM 生成，带观点不鸡汤
+- **跨分类去重**：同一篇文章不会被两个分类重复推
+- **失败降级**：LLM 挂了用原标题，源挂了跳过该条
 
 ## 快速部署（10 分钟）
 
-### 1. 创建企微群机器人
+### 1. 建企微群机器人
 
-1. 企业微信群里：右键群 → 群设置 → 群机器人 → 添加机器人
-2. 起个名字（比如 `AI 日报`），拿到 Webhook URL：
-   `https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxxxxxx-xxxx-xxxx`
-3. **复制 URL 末尾的 key 部分**（`?key=` 后面那一串）
+群里右键 → 群设置 → 群机器人 → 添加 → 起名 → 复制 Webhook URL 末尾的 `key=xxxx` 部分。
 
-### 2. Fork / Clone 本仓库
+### 2. 申请 GLM API Key
+
+智谱开放平台（https://open.bigmodel.cn/）→ 注册 → 控制台 → API Keys → 创建。
+**GLM-4-Flash 模型免费**，日推 15 条足够用。
+
+### 3. 配置两个 GitHub Secret
+
+仓库 Settings → Secrets and variables → Actions → New：
+
+| Name | Value |
+|---|---|
+| `WECOM_WEBHOOK_KEY` | 企微 Webhook URL 末尾的 key（不带 `?key=`） |
+| `GLM_API_KEY` | 智谱 GLM 的 API Key |
+
+### 4. Fork / Clone 后 push 到 GitHub
 
 ```bash
-git clone <你的仓库地址>
+git clone <仓库地址>
 cd ai-daily-wecom
+# 改完代码或 RSS 源
+./push-all.sh
 ```
 
-### 3. 配置 GitHub Secret
+### 5. 启用 GitHub Actions
 
-仓库 → Settings → Secrets and variables → Actions → New repository secret
+push 后到 GitHub 仓库 Actions 标签页 → Enable workflows → Run workflow 手动测一次。
 
-- Name：`WECOM_WEBHOOK_KEY`
-- Value：第 1 步复制的 key（**只填 key，不要带 `?key=`**）
-
-### 4. 本地测试（可选但推荐）
+## 本地测试
 
 ```bash
 pip install -r requirements.txt
 cd src
 
+# 设环境变量（任选其一）
+export GLM_API_KEY="你的key"
+export WECOM_WEBHOOK_KEY="你的企微key"   # 不设也能 dry-run
+
 # dry-run，只打印不推送
 python main.py --dry-run
 
-# 强制走早间策略
-python main.py --morning --dry-run
+# 改条数
+python main.py --dry-run --count 10
 
-# 真的推送到群里（确认 Webhook Key 已设置）
+# 真的推送到群
 python main.py
 ```
 
-### 5. 启用 GitHub Actions
-
-- push 到 GitHub 后，Actions 标签页应该能看到 `AI Daily Push` workflow
-- 点 `Enable workflows`
-- 想立刻测试？点 `Run workflow` 手动触发一次
-
 ## 自定义
 
-### 加 / 删 RSS 源
+### 改 RSS 源
 
-编辑 `src/config.py` 里的 `RSS_SOURCES`，按类别加：
+编辑 `src/config.py` 的 `RSS_SOURCES`：
 
 ```python
-"news": [
-    ...
-    {
-        "name": "我的新源",
-        "url": "https://example.com/rss",
-        "weight": 4,   # 1-5，越高越优先
-        "lang": "zh",
-    },
+"frontier": [
+    {"name": "我的源", "url": "https://...", "weight": 5, "lang": "zh"},
 ],
 ```
 
-### 改推送时段 / 数量
+`weight` 1-5，影响打分排序。当前国内 AI 站点很多没原生 RSS（智东西/AIbase/新智元/AIGC开放社区），真正稳定可用的就是机器之心/雷锋网/量子位 这 3 家。
 
-编辑 `src/config.py` 里的 `SCHEDULES`：
+### 改条数 / 标题 / 微语风格
 
-```python
-SCHEDULES = {
-    "morning": {
-        "categories": ["open_source", "tutorial"],
-        "counts": {"open_source": 3, "tutorial": 2},  # 各推几条
-        ...
-    },
-    ...
-}
+`src/config.py`：
+- `PUSH_COUNT`：推送条数（默认 15）
+- `PUSH_TITLE`：顶部标题
+
+`src/summarizer.py`：调整 `SYSTEM_PROMPT` 改简讯风格（更狠 / 更稳 / 更口语）。
+
+### 改 LLM 模型
+
+`src/config.py`：
+- `GLM_MODEL = "glm-4-flash"` 免费，想要更强用 `"glm-4-plus"`（计费）
+
+### 改推送时间
+
+`.github/workflows/daily.yml` 里 cron 表达式：
+```yaml
+- cron: '0 1 * * *'    # 北京 09:00（UTC 1:00）
 ```
-
-同时改 `.github/workflows/daily.yml` 里的 cron 表达式。
-
-### 改热词（影响排序）
-
-编辑 `src/config.py` 里的 `HOT_KEYWORDS`，命中的文章会加分排前面。
-
-## 数据源
-
-| 类别 | 源 |
-|---|---|
-| 开源项目 | GitHub Trending (AI/ML, Jupyter)、HuggingFace |
-| 教程博客 | OpenAI Blog、Anthropic News、HuggingFace Blog、Sebastian Raschka、Lilian Weng、机器之心 |
-| 行业新闻 | 量子位、新智元、TLDR AI、The Batch、Reddit r/artificial |
-| 前沿论文 | HuggingFace Daily Papers、ArXiv cs.AI、ArXiv cs.CL |
-
-## 常见问题
-
-**Q: 推送失败，errcode=45009？**
-A: 触发限频（每机器人 20 条/分钟）。代码里有自动重试，但如果你配了多个 cron 同时跑就会冲突。改 cron 错开几分钟。
-
-**Q: 推送内容是空的？**
-A: 检查 Actions 日志，看是不是 RSS 源全挂了。可以临时跑 `python main.py --morning --dry-run` 看抓取情况。
-
-**Q: 想换群 / 换 Key？**
-A: 改 GitHub Secret 即可，不用改代码。
-
-**Q: seen.json 怎么管理？**
-A: workflow 每次跑完会自动 commit 回仓库，跨次运行时去重靠它。如果你想"重新推一遍所有内容"，删掉 `src/seen.json` 即可。
 
 ## 文件结构
 
 ```
 ai-daily-wecom/
-├── .github/workflows/daily.yml   # GitHub Actions 定时任务
+├── .github/workflows/daily.yml   # GitHub Actions 定时
 ├── src/
-│   ├── config.py                  # RSS 源 + 推送策略（**主要改这里**）
-│   ├── fetcher.py                 # RSS 抓取
-│   ├── selector.py                # 去重 + 打分 + 选片
+│   ├── config.py                  # 配置（**主要改这里**）
+│   ├── fetcher.py                 # RSS 抓取（并发+超时）
+│   ├── selector.py                # 去重 + 打分 + 选片 + 跨分类相似去重
+│   ├── summarizer.py              # GLM 改写简讯 + 微语
 │   ├── formatter.py               # 企微 markdown 格式化
-│   ├── notifier.py                # Webhook 推送
+│   ├── notifier.py                # Webhook 推送（重试+限频兜底）
 │   └── main.py                    # 主入口
 ├── requirements.txt
+├── push-all.sh                    # 一键推 gitee + github
 └── README.md
 ```
 
+## 常见问题
+
+**Q: 推送失败 errcode=45009？**
+A: 触发限频（每机器人 20 条/分钟）。代码里有 30s 重试。如果你同时配了多个 cron 撞时间就会冲突。
+
+**Q: LLM 改写偶尔少几条？**
+A: GLM 数数偶尔抽风。代码做了兜底：缺的用原标题补齐，不影响整体推送。
+
+**Q: 想换群 / 换 Key？**
+A: GitHub Secret 改完立即生效，代码不用动。
+
+**Q: seen.json 怎么管理？**
+A: workflow 每次跑完会自动 commit 回仓库做去重。想"重新推一遍"删 `src/seen.json` 即可。
+
+**Q: 机器之心 RSS 经常失败？**
+A: 站点 XML 偶尔格式错误。代码做了单源失败兜底，机器之心挂了不影响量子位+雷锋网。
+
 ## 已知限制
 
-- 企微 markdown 不支持图片直接嵌入；当前方案只发文字链接
-- 部分国内 RSS 源可能间歇性 503，代码里做了并发+超时兜底，但单源挂了就少一条
-- GitHub Actions cron 不保证准时，通常延迟 5-15 分钟，介意可换云服务器 cron
+- 企微 markdown 不支持图片直接嵌入，当前纯文字
+- 15 条 + 链接偶尔超 2000 字符，会自动降级去掉来源标注（链接保留）
+- GitHub Actions cron 不保证准时，通常延迟 5-15 分钟
